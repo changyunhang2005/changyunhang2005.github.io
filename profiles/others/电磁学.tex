@@ -1,0 +1,209 @@
+\documentclass{ctexart}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\bibliographystyle{plain}
+\begin{document}
+\begin{titlepage}
+   \begin{center}
+    \vspace*{1cm}
+    \Huge
+    \textbf{利用计算机技术探究带电粒子在磁镜中的运动}
+    \vspace{0.3cm}
+    \vfill
+    \huge
+    \textbf{张朔宁、常运航}\\
+    \vspace{0.8cm}
+    \vspace{1.5cm}
+    \LARGE      
+    
+    少年班学院3班\\
+    \today\\
+   \end{center}
+\end{titlepage}
+\pagestyle{empty}
+\begin{center}
+    \huge
+    \textbf{利用计算机技术探究带电粒子在磁镜中的运动}
+    \\
+    \vspace{0.4cm}
+    \LARGE
+    \vspace{0.4cm}
+    \textbf{张朔宁、常运航}
+\end{center}
+
+
+\section{课题简介}
+磁镜装置指的是具有两端强，中间弱的磁场位形的装置，根据带电粒子在磁场中的运动规律，可以看出磁镜可以将带电粒子束缚在弱磁场区域。
+磁镜的这一特性具有广泛的应用，利用它对粒子的捕获效应，可以对实验室中的等离子体进行磁约束。由于实验室中的磁镜装置制造比较困难，很难通过实物来研究磁镜的特性，所以本实验将借助计算机技术，
+通过编写python程序来近似模拟带电粒子在磁镜中的运动。
+\section{理论推导}
+在使用计算机进行模拟之前，我们先从理论上进行一定的推导，为之后编写程序打好基础。
+\subsection{磁矩守恒}
+我们首先证明，在静磁场中运动的带电粒子满足磁矩守恒。
+\par 
+取一个方向为z轴方向，将$v_0$沿着平行z轴方向和垂直z轴方向分解为$v_{\perp }$和$v_{\parallel }$，将$B$分解为$B_z$和$B_r$，我们得到
+\begin{align}
+    mv_{\perp }&=qB_zr\\
+    m\frac{dv_{\parallel }}{dt}&=qB_rv_{\perp }
+\end{align}
+同时我们易知
+\begin{align}
+    v_{\perp }^2+v_{\parallel }^2=v_0^2
+    dv_{\perp }^2+dv_{\parallel }^2=0
+\end{align}
+取一个圆柱面，由磁场的高斯定理$\iint \vec{B}d\vec{S}=0$，取一个圆柱面，得
+\begin{equation}
+    dB_z\pi r^2+B_r2\pi dz=0
+\end{equation}
+从而得到
+\begin{equation}
+    B_r=-\frac{1}{2}r\frac{\partial B_z}{\partial z}
+\end{equation}
+联立以上各式得
+\begin{equation}
+    -\frac{1}{2}dv_{\perp }^2=\frac{1}{2}dv_{\parallel }^2=v_{\parallel }dv_{\parallel }=-\frac{qv_{\perp }r}{2m}dB_z
+\end{equation}
+最后我们得到$\frac{dv_{\perp }^2}{v_{\perp }^2}-\frac{dB_z}{B_z}$，记$\mu=\frac{mv_{\perp }^2}{2B_z}=Const$。即磁矩守恒。
+\subsection{磁镜磁场的表示}  
+为了使理论简单，我们考虑如下结构的磁镜：两个通有相同方向的电流的线圈相隔一段距离$a$放置，设两线圈电流相等均为$I$，由毕奥-萨伐尔定律积分得，单个线圈对距离为$z$的位置产生的电磁场为
+\begin{equation}
+    B_z=\frac{\mu_0 Ir^2}{2(z^2+r^2)^{3/2}}
+\end{equation}
+则两个线圈产生的共同磁场为
+\begin{equation}
+    B_z=\frac{\mu_0 I r^2 }{2}[\frac{1}{(z^2+r^2)^{3/2}}+\frac{1}{((a-z)^2+r^2)^{3/2}}]
+\end{equation}
+由表达式易知，对$0\le z\le a$，在两线圈处磁场取最大值，在中点处磁场取最小值。
+\par 
+而对于不再中轴线上的点，采用极坐标系$(r_0,\theta ,\varphi )$，可以证明，$B$的两个分量$B_r$和$B_z$满足
+\begin{align}
+    B_r&=\frac{\mu_0 I R r_0 cos\theta}{4\pi}\int_{0}^{2\pi} \frac{cos\varphi d\varphi  }{(r_0^2+R^2-2r_0 R sin\theta cos \varphi )^{3/2}}\\
+    B_z&=\frac{\mu_0 I R }{4 \pi}\int_{0}^{2\pi} \frac{(R-r_0 sin \theta cos\varphi)d\varphi}{(r_0^2+R^2-2r_0 R sin\theta cos \varphi)^{3/2}}
+\end{align}
+对上式进行三阶展开近似
+\begin{align}
+    B_r&=\mu_0 I [\frac{3 R^2 r_0^2 sin\theta cos\theta}{4(R^2+r_0^2)^{5/2}}+\frac{105}{32}\frac{R^4 r_0^4 sin^3\theta cos\theta}{(r_0^2+R^2)^{9/2}}]\\
+    B_z&=\mu_0 I [\frac{R^2}{2(r_0^2+R^2)^{3/2}}+\frac{15}{8}\frac{R^4r_0^2 sin^2\theta}{(r_0^2+R^2)^{7/2}}-\frac{3}{4}\frac{R^2r_0^2 sin^2\theta}{(r_0^2+R^2)^{5/2}}-\frac{105}{32}\frac{R^4r_0^4 sin^4\theta}{(r_0^2+R^2)^{9/2}}]
+\end{align}
+\par
+之所以使用三阶近似而不是一阶近似，是因为一阶近似存在很大的误差，比如对通有$50\mathrm{A}$电流，分别位于$20\mathrm{m},-20\mathrm{m}$的线圈，计算得到的磁感应强度如表所示。
+\begin{table}[h]
+    \centering
+    \caption{一阶和三阶近似计算的磁感应强度}
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        坐标(1e-4,1e-4,z) & 一阶展开的结果 & 三阶展开的结果 & 真实值\\
+        \hline
+        -20.00 & 1.2433979882426903e-11 & 9.948426423176969e-08 & 9.94842269302258e-08\\
+        \hline
+        -15.56 & 9.082072465222963e-09 & 6.891627253400045e-09 & 6.891628624345703e-09 \\
+        \hline
+        -6.67  & 3.7768212866048404e-10 & 3.663105725890689e-10 & 3.663105833583791e-10 \\
+        \hline
+        -2.22 & 2.1414577000580014e-10 & 2.1062669610120532e-10 & 2.1062669952083982e-10 \\
+        \hline
+    \end{tabular}
+\end{table}
+\par
+取此坐标的原因是这些点的位置离z轴很近，磁场变化较为缓慢。可以看到，三阶近似的结果比一阶近似的结果更接近直接积分得出的值，但由于直接积分的速度很慢，所以接下来将使用三阶近似进行磁感应强度模拟。
+\par
+这样，给定带电粒子的初始运动状态，我们就可以通过计算出的磁场计算粒子之后的运动轨迹，并探讨粒子运动被束缚的条件。
+\section{计算机模拟}
+\subsection{算法介绍}
+本研究将采用Boris算法\cite{Boris}来计算带电粒子的运动轨迹，具体方法如下：首先写出运动方程
+\begin{align}
+    \frac{d\vec{x}}{dt}&=\vec{v}\\
+    m\frac{d\vec{v}}{dt}&=q\vec{v}\times \vec{B}
+\end{align}
+下一步通过第 k 步相空间坐标 ($\vec{x_k},\vec{v_k}$) 求解第 k+1 步相空间坐标 ($\vec{x_{k+1}},\vec{v_k+1}$)。将上式写为离散形式，用$\frac{\vec{v_{k}}+\vec{v_{k+1}}}{2}$替代$\vec{v}$，设时间步长为$h$，
+得到
+\begin{align}
+    \frac{\vec{x_{k+1}}-\vec{x_k}}{h}&=\vec{v_{k+1}}\\
+    \frac{\vec{v_{k+1}}-\vec{v_k}}{h}&=\frac{q(\vec{v_{k+1}}+\vec{v_k})\times\vec{B_k}}{2m}
+\end{align}
+利用迭代的算法即可算出粒子运动的轨迹。相对于其他迭代算法，Boris算法能够保证在长时间迭代下能量守恒，这就让我们通过多次迭代模拟粒子运动轨迹成为可能。
+而Boris算法能保持速度守恒的原因是$(\vec{v_{k+1}}-\vec{v_k})\perp (\vec{v_{k+1}}+\vec{v_k})$，两向量垂直所以点乘为0，这就得到$\vec{v_{k+1}}$和$\vec{v_k}$的模长相等，能量是守恒的。
+\subsection{模拟结果}
+\subsubsection{临界角} 
+定义粒子的投掷角$sin\theta =v_{\perp}/v(0\le \theta \le \pi/2)$，设弱场的最小磁感应强度为$B_0$，则粒子被磁场反射时应满足
+\begin{equation}
+    \frac{1}{2} m v^2 sin^2\theta / B_0 = \frac{1}{2} m v^2 / B
+\end{equation}
+设磁镜的极大磁场为$B_m$，则投掷角大于$\theta_m$的粒子将被捕获，其中$\theta_m$满足
+\begin{equation}
+    sin^2 \theta_m = \frac{B_0}{B_m}
+\end{equation}
+而通过给予粒子不同的投掷角，模拟粒子之后的运动轨迹，我们可以根据之后轨迹的形状判断粒子是否被束缚住。
+\par  
+将线圈放在正负$100\mathrm{m}$处，模拟两次得到如图的轨迹。\par
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.6]{没束缚住.png}
+    \caption{粒子没有被束缚住}
+\end{figure}
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.6]{束缚住了.png}
+    \caption{粒子被束缚住了}
+\end{figure}
+可以看到，粒子的投掷角大于最小投掷角时，磁镜能够将粒子束缚住；而粒子的投掷角小于最小投掷角时，粒子会从磁镜中逃逸出来。
+\subsubsection{周期现象}
+在模拟带电粒子的运动轨迹时，我们发现了有趣的现象：粒子如果已经束缚在磁镜中，那么它的运动时间近似是周期的。取$I=50A,v_0=(1,0,5)$
+\begin{table}[h]
+    \centering
+    \caption{粒子运动的时间}
+    \begin{tabular}{|c|c|c|}
+        \hline
+        z=10 & z=20 & z=30 \\
+        \hline
+        1162100 & 1427806 & 2105583 \\
+        \hline
+        2324200 & 2855612 & 4211165 \\
+        \hline
+        3486299 & 4283418 & 6316747 \\
+        \hline
+        4648399 & 5711224 & 8422329 \\
+        \hline
+        5810499 & 7139030 & 10527911 \\
+        \hline
+    \end{tabular}
+\end{table}
+这一列上的数字代表粒子到达同一位置时的运动时间，由图我们可以看出，这个时间成等差数列，所以通过实验模拟我们可以得出粒子在磁镜中是存在着时间周期性的现象。
+\par
+接下来我们考查了周期和投掷角的关系，在速度大小不变的情况下，利用计算机模拟结果如下
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.4]{Snipaste_2023-06-24_23-39-52.png}
+    \caption{周期和投掷角的关系}
+\end{figure}
+\par
+可以得到，周期函数随投掷角呈下降趋势。\par
+但同时我们也注意到，虽然运动时间存在周期性，但是运动本身却不一定是周期的，这一点可以从下图中看出。
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.6]{Figure_1.png}
+    \caption{非周期运动}
+\end{figure}
+\subsubsection{模拟中遇到的问题}
+在实验模拟中，我们得出了一组异常数据：\par
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.5]{z1=200,I=50A.png}
+    \caption{异常数据}
+\end{figure}
+在这组数据中，虽然投掷角大于最小投掷角，但是磁场仍然没有将粒子束缚住。我们尝试将电流增大以增大磁感应强度，这时粒子被束缚在磁镜内。\par 
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.5]{z1=200,I=500.png}
+    \caption{正常数据}
+\end{figure}
+通过多次模拟，我们猜想在磁场过弱的情况下，即使投掷角大于“最小投掷角”，也有可能束缚不住。这一现象的根本原因是，在计算最小投掷角时，我们是将轴线中点和边缘的磁感应强度值代入，但如果粒子运动半径很大，那么磁场最小值就不能用轴线上的值代入，这也意味着我们无法精确的算出最小投掷角的值。
+\section{实际应用}
+通过利用磁镜可以约束带电粒子的特性，科研人员将其应用到了各个领域，取得了很多成果。例如紧凑型聚变反应装置(compact  fusion  reactor,  CFR)是根据磁镜约束原理提出的一种“高$\beta$ 聚变反应堆”，
+具有较大的潜在应用价值。其约束磁场由多组同轴线圈产生，分别为一个中心线圈，一组内部线圈，两组封装线圈和一组磁镜线圈组成，产生了一个边界磁场较强但芯部磁场较弱的磁阱结构，使高温带电等离子体能约束在装置内部。
+\par
+除此之外，磁镜还有助于我们了解类似磁场的特性。比如地球两极中间的磁场也具有两头强中间弱的特点，这种类磁镜的现象使地球周围存在着由被磁场捕获的质子或电子构成的带电粒子区域，这个区域也被称为“范爱伦带”。
+\section{结语}
+磁镜作为一类经典的装置，因为具有能捕获带电粒子的特性而得到广泛的应用。本研究则借助于计算机技术，模拟了磁镜的磁场位形，探究不同带电粒子在磁镜中不同的运动轨迹，并针对模拟中出现的问题给予了初步的解释。
+\bibliography{ref}
+\end{document}
